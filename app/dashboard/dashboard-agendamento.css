@@ -1,0 +1,164 @@
+/* ── Adicionar ao final do dashboard.css ─────────────────────────────────── */
+
+/* Modal Agendamento */
+.modal-box--agendamento {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Grid de dias */
+.agenda-dias-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 16px 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.agenda-dia-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 6px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--dark);
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.4;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.agenda-dia-btn:hover {
+  background: var(--bg-deep);
+  border-color: var(--gold);
+}
+
+/* Voltar */
+.agenda-voltar {
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0 0 12px 0;
+  display: block;
+  text-align: left;
+}
+
+.agenda-voltar:hover {
+  color: var(--dark);
+}
+
+/* Loading */
+.agenda-loading {
+  text-align: center;
+  padding: 24px 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* Grid de slots */
+.agenda-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 8px 0 16px;
+}
+
+.agenda-slot-btn {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 4px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dark);
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.agenda-slot-btn:hover {
+  background: var(--bg-deep);
+  border-color: var(--gold);
+}
+
+.agenda-slot-btn.selected {
+  background: var(--dark);
+  color: var(--gold);
+  border-color: var(--dark);
+}
+
+/* Confirmação */
+.agenda-confirmacao-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  margin: 12px 0;
+}
+
+.agenda-confirmacao-dia {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0 0 4px;
+  text-transform: capitalize;
+}
+
+.agenda-confirmacao-hora {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--dark);
+  margin: 0 0 4px;
+  letter-spacing: 1px;
+}
+
+.agenda-confirmacao-duracao {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.agenda-politica-aviso {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+/* Cancelar consulta (Estado 3) */
+.agenda-cancelar-btn {
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: 16px;
+  padding: 0;
+}
+
+.agenda-cancelar-btn:hover {
+  color: var(--danger);
+}
+
+.agenda-cancelar-aviso {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 16px;
+  line-height: 1.5;
+}

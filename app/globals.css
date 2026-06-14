@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+/*
+ * QUIROS — Design Tokens Unificados
+ * Fonte única de verdade para cores, fontes e base styles.
+ * Todos os CSS modules do projeto importam daqui via var(--*)
+ * NÃO use classes Tailwind de cor/fonte diretamente — use as variáveis abaixo.
+ */
+
+:root {
+  /* ── Cores — novo sistema claro ── */
+  --bg:      #e8dcc8;
+  --bg-deep: #ddd0b8;
+  --surface: #f0e8d8;
+  --dark:    #130f0a;
+  --navy:    #1e1710;
+  --gold:    #d4a84b;
+  --gold-lt: #e8c97a;
+  --gold-dk: #8a5e18;
+  --cream:   #e8dcc8;
+  --text-on-dark:#e8dcc8;
+  --muted:   #7a6a55;
+  --border:  rgba(19,15,10,0.12);
+  --danger:  #c0392b;
+
+  /* ── Textos Semânticos ── */
+  --primary-text: var(--dark);
+  --secondary-text: var(--muted);
+
+  /* ── Botão primário — sempre escuro com dourado ── */
+  --btn-bg:    #130f0a;
+  --btn-color: #d4a84b;
+
+  /* ── Fontes ── */
+/* ── Fontes (Referência: quiros_hibrido) ── */
+  --font-cormorant: 'Cormorant Garamond', Georgia, serif;
+  --font-jost: 'Jost', 'Helvetica Neue', sans-serif;
+  --font-lora: 'Lora', serif;
+
+  /* Atribuição de Uso */
+  --font-display: var(--font-cormorant);
+  --font-body:    var(--font-lora); /* Lora para o corpo do texto e chat */
+  
+  /* Aliases para o Tailwind/Componentes */
+  --font-serif: var(--font-display);
+  --font-sans:  var(--font-jost);
+}
+
+/* ── Reset base ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--dark);
+  font-family: var(--font-body);
+  font-weight: 400;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-dk); }
