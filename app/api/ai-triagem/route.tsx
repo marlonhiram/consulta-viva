@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { sendEmail } from '@/lib/email'
 import { EmailTriagemRecebida } from '@/emails/triagem-recebida'
+import { VALOR_CONSULTA_FORMATADO } from '@/lib/constants'
+import { aiTriagemSchema } from '@/lib/validation'
 
 export interface TriagemMessage {
   role: 'user' | 'model'
@@ -41,7 +44,7 @@ Se o cliente fizer alguma pergunta antes de informar a data, responda à dúvida
 
 Se a pergunta for sobre a consulta premium, use exatamente este texto:
 
-A consulta premium é realizada via chat em nossa própria plataforma. São 30 minutos de conversa exclusiva onde você pode tirar dúvidas específicas e aprofundar a análise (o valor é de R$ 197,00). Respondido? Agora, para prosseguirmos: Poderia nos informar sua data de nascimento? Ela é um dado fundamental para que a especialista cruze as informações e entregue o melhor resultado.
+A consulta premium é realizada via chat em nossa própria plataforma. São 30 minutos de conversa exclusiva onde você pode tirar dúvidas específicas e aprofundar a análise (o valor é de ${VALOR_CONSULTA_FORMATADO}). Respondido? Agora, para prosseguirmos: Poderia nos informar sua data de nascimento? Ela é um dado fundamental para que a especialista cruze as informações e entregue o melhor resultado.
 
 Se a pergunta for sobre prazo ou tempo de resposta da análise gratuita, use exatamente este texto:
 
@@ -131,7 +134,7 @@ IMPORTANTE: Se o cliente fizer qualquer pergunta junto com a confirmação, resp
 Se o cliente fizer alguma pergunta antes de informar a data, responda à dúvida e em seguida solicite a data.
 Se a pergunta for sobre a consulta premium, use exatamente este texto:
 
-A consulta é realizada via chat em nossa própria plataforma. São 30 minutos de conversa exclusiva onde você pode tirar dúvidas específicas e aprofundar a análise (o valor é de R$ 197,00). Respondido? Agora, para prosseguirmos: Poderia nos informar sua data de nascimento? Ela é um dado fundamental para que a especialista cruze as informações e entregue o melhor resultado.
+A consulta é realizada via chat em nossa própria plataforma. São 30 minutos de conversa exclusiva onde você pode tirar dúvidas específicas e aprofundar a análise (o valor é de ${VALOR_CONSULTA_FORMATADO}). Respondido? Agora, para prosseguirmos: Poderia nos informar sua data de nascimento? Ela é um dado fundamental para que a especialista cruze as informações e entregue o melhor resultado.
 
 Se o cliente não tiver dúvidas, vá direto com este texto:
 
@@ -174,7 +177,7 @@ REGRA: Não avance enquanto todos os arquivos não forem enviados.
 
 === ETAPA 4 — Encerramento ===
 Informe que os materiais foram recebidos e que agora é só finalizar pelo dashboard:
-- Adicionar créditos via PIX (R$ 197,00)
+- Adicionar créditos via PIX (${VALOR_CONSULTA_FORMATADO})
 - Após o pagamento: agendamento liberado, o cliente escolhe o melhor horário
 - A consulta ao vivo acontece aqui na plataforma, por chat, com 30 minutos com a especialista
 Encerre com entusiasmo e energia positiva.
@@ -182,33 +185,42 @@ Encerre com entusiasmo e energia positiva.
 Escreva exatamente o token TRIAGEM_CONCLUIDA em algum lugar da sua resposta.`
 }
 
-// Inicializa o Supabase com Service Role para garantir a gravação (ignora RLS nesta rota de API)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseKey)
-
 export async function POST(request: NextRequest) {
   try {
-    // ⚠️ ATENÇÃO: Adicionamos o consultationId e userId aqui
-    const { messages, photosConfirmed, consultationId, userId, photos, isPromocao, isRetornante, handDominance } = await request.json() as {
-      messages: TriagemMessage[]
-      photosConfirmed?: boolean
-      consultationId?: string
-      userId?: string
-      photos?: string[]
-      isPromocao?: boolean
-      isRetornante?: boolean
-      handDominance?: string
+    // Identifica o usuário pela sessão autenticada — nunca pelo body da requisição,
+    // que pode ser manipulado por qualquer chamador.
+    const authClient = await createServerSupabaseClient()
+    const { data: { user } } = await authClient.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
+
+    const parsed = aiTriagemSchema.safeParse(await request.json())
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
     }
+    const { photosConfirmed, consultationId, photos, isPromocao, isRetornante, handDominance } = parsed.data
+    const messages = parsed.data.messages as TriagemMessage[]
+    const userId = user.id
 
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
-      
+
       return NextResponse.json({ error: 'Gemini API key não configurada.' }, { status: 500 })
     }
 
-    if (!consultationId || !userId) {
-      console.warn("Aviso: consultationId ou userId não fornecidos. O histórico não será salvo no banco.")
+    if (!consultationId) {
+      console.warn("Aviso: consultationId não fornecido. O histórico não será salvo no banco.")
+    } else {
+      // Garante que a consulta pertence ao usuário autenticado antes de escrever nela.
+      const { data: consultation } = await supabase
+        .from('consultations')
+        .select('id')
+        .eq('id', consultationId)
+        .eq('user_id', userId)
+        .single()
+
+      if (!consultation) {
+        return NextResponse.json({ error: 'Consulta não encontrada.' }, { status: 404 })
+      }
     }
 
     const history: TriagemMessage[] = messages.length === 0

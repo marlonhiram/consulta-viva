@@ -52,3 +52,70 @@ export const photoUploadSchema = z.object({
 })
 
 export type PhotoUploadInput = z.infer<typeof photoUploadSchema>
+
+// ---- Rotas de API (body de requisição) ----
+const uuid = z.string().uuid('ID inválido')
+
+export const criarPixSchema = z.object({
+  consultationId: uuid,
+  userEmail: z.string().email('E-mail inválido'),
+  userName: z.string().min(1, 'Nome obrigatório').max(120),
+})
+export type CriarPixInput = z.infer<typeof criarPixSchema>
+
+export const agendarConsultaSchema = z.object({
+  consultationId: uuid,
+  startsAt: z.string().datetime({ message: 'Data/hora inválida' }).or(z.string().min(1)),
+})
+export type AgendarConsultaInput = z.infer<typeof agendarConsultaSchema>
+
+export const consultationIdOnlySchema = z.object({
+  consultationId: uuid,
+})
+export type ConsultationIdOnlyInput = z.infer<typeof consultationIdOnlySchema>
+
+export const creditIdOnlySchema = z.object({
+  creditId: uuid,
+})
+export type CreditIdOnlyInput = z.infer<typeof creditIdOnlySchema>
+
+export const enviarMensagemSchema = z.object({
+  consultationId: uuid,
+  content: z.string().min(1, 'Mensagem vazia').max(4000, 'Mensagem muito longa'),
+  messageType: z.enum(['text', 'image']).optional(),
+})
+export type EnviarMensagemInput = z.infer<typeof enviarMensagemSchema>
+
+export const enviarLeituraSchema = z.object({
+  consultationId: uuid,
+  analysisSummary: z.string().min(10, 'Análise muito curta'),
+})
+export type EnviarLeituraInput = z.infer<typeof enviarLeituraSchema>
+
+export const recusarFotosSchema = z.object({
+  consultationId: uuid,
+  rejectionReason: z.string().min(10, 'Motivo muito curto'),
+})
+export type RecusarFotosInput = z.infer<typeof recusarFotosSchema>
+
+export const cancelarConsultaAdminSchema = z.object({
+  consultationId: uuid,
+  reason: z.string().min(10, 'Motivo muito curto'),
+})
+export type CancelarConsultaAdminInput = z.infer<typeof cancelarConsultaAdminSchema>
+
+export const aiTriagemSchema = z.object({
+  messages: z.array(
+    z.object({
+      role: z.enum(['user', 'model']),
+      parts: z.array(z.object({ text: z.string() })).length(1),
+    })
+  ),
+  photosConfirmed: z.boolean().optional(),
+  consultationId: uuid.optional(),
+  photos: z.array(z.string()).optional(),
+  isPromocao: z.boolean().optional(),
+  isRetornante: z.boolean().optional(),
+  handDominance: z.string().optional(),
+})
+export type AiTriagemInput = z.infer<typeof aiTriagemSchema>

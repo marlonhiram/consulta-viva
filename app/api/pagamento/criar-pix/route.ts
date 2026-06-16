@@ -1,17 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
+import { VALOR_CONSULTA } from '@/lib/constants'
+import { criarPixSchema } from '@/lib/validation'
 
 export async function POST(req: NextRequest) {
   try {
-    const { consultationId, userEmail, userName } = await req.json()
+    const authClient = await createServerSupabaseClient()
+    const { data: { user } } = await authClient.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    if (!consultationId || !userEmail || !userName) {
-      return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
+    const parsed = criarPixSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
+    }
+    const { consultationId, userEmail, userName } = parsed.data
+
+    // Garante que a consulta pertence ao usuário autenticado
+    const { data: consultation } = await supabase
+      .from('consultations')
+      .select('id')
+      .eq('id', consultationId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (!consultation) {
+      return NextResponse.json({ error: 'Consulta não encontrada.' }, { status: 404 })
     }
 
     // Verifica se já existe pagamento pendente ou pago
@@ -36,7 +50,7 @@ export async function POST(req: NextRequest) {
         'X-Idempotency-Key': consultationId,
       },
       body: JSON.stringify({
-        transaction_amount: 197,
+        transaction_amount: VALOR_CONSULTA,
         description: 'Consulta Premium de Quiromancia — Quiros',
         payment_method_id: 'pix',
         payer: {
@@ -77,7 +91,7 @@ export async function POST(req: NextRequest) {
         .insert({
           consultation_id: consultationId,
           gateway_id: gatewayId,
-          amount: 100.00,
+          amount: VALOR_CONSULTA,
           status: 'pending',
         })
     }

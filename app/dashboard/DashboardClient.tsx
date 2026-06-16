@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import { VALOR_CONSULTA, VALOR_CONSULTA_FORMATADO } from '@/lib/constants'
 import './dashboard.css'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -392,7 +393,7 @@ function ModalPix({
         )}
         {step === 'qr' && (
           <>
-            <div className="modal-eyebrow">Consulta Premium · R$ 197,00</div>
+            <div className="modal-eyebrow">Consulta Premium · {VALOR_CONSULTA_FORMATADO}</div>
             <h2 className="modal-title">Pague via PIX</h2>
             <p className="modal-desc">Escaneie o QR Code abaixo ou copie o código PIX. Após o pagamento, sua consulta será liberada automaticamente.</p>
             {qrCodeBase64 && <div className="pix-qr-wrap"><img src={`data:image/png;base64,${qrCodeBase64}`} alt="QR Code PIX" className="pix-qr-img" /></div>}
@@ -713,7 +714,7 @@ async function handleSolicitarReembolso(creditId: string) {
                     <p className="premium-cta-label">Quer ir mais fundo?</p>
                     <p className="premium-cta-desc">Agende uma consulta ao vivo de 30 minutos com a especialista.</p>
                     <button className="btn-primary" onClick={() => setModalPix(true)}>
-                      Adquirir Consulta Premium — R$ 197
+                      Adquirir Consulta Premium — R$ {VALOR_CONSULTA}
                     </button>
                   </div>
                 )}

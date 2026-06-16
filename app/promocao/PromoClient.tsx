@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import './promo.css'
 import { createClient } from '@/lib/supabase'
+import { VALOR_CONSULTA } from '@/lib/constants'
 const supabase = createClient()
 
 /* ─────────────── tipos ─────────────── */
@@ -469,7 +470,7 @@ export default function PromoClient({ promo }: Props) {
             <span className="upgrade-label">Consulta individual</span>
             <h3 className="upgrade-title">Análise <em>completa</em></h3>
             <p className="upgrade-sub">Ao vivo via chat com a especialista</p>
-            <div className="upgrade-price"><sup>R$</sup>197</div>
+            <div className="upgrade-price"><sup>R$</sup>{VALOR_CONSULTA}</div>
             <span className="upgrade-duration">sessão de 30 minutos</span>
 
             <ul className="upgrade-features">

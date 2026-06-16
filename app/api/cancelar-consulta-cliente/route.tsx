@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendEmail } from '@/lib/email'
 import { EmailCancelamentoCliente } from '@/emails/cancelamento-cliente'
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { VALOR_CONSULTA } from '@/lib/constants'
+import { consultationIdOnlySchema } from '@/lib/validation'
 
 export async function POST(req: NextRequest) {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-  const { consultationId } = await req.json()
-  if (!consultationId) return NextResponse.json({ error: 'consultationId obrigatório.' }, { status: 400 })
+  const parsed = consultationIdOnlySchema.safeParse(await req.json())
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
+  }
+  const { consultationId } = parsed.data
 
   // Buscar consulta
   const { data: consultation } = await supabaseAdmin
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
       user_id: user.id,
       consultation_id: consultationId,
       origin: 'cancellation_refund',
-      amount: 100.00,
+      amount: VALOR_CONSULTA,
       status: 'available',
     })
 

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
+import { VALOR_CONSULTA, VALOR_CONSULTA_FORMATADO } from '@/lib/constants'
 import './leitura.css'
 
 interface Props {
@@ -79,7 +80,7 @@ function ModalPix({ consultationId, userEmail, userName, onClose, onPago }: {
     <div className="leitura-modal-overlay" onClick={onClose}>
       <div className="leitura-modal-box" onClick={e => e.stopPropagation()}>
         <div className="leitura-modal-header">
-          <span className="leitura-modal-title">Consulta Premium · R$ 197,00</span>
+          <span className="leitura-modal-title">Consulta Premium · {VALOR_CONSULTA_FORMATADO}</span>
           <button className="leitura-modal-close" onClick={onClose}>×</button>
         </div>
         <div style={{ padding: '24px' }}>
@@ -253,13 +254,13 @@ export default function LeituraClient({
                 </div>
 
                 <div className="leitura-cta-preco">
-                  <span className="preco-valor">R$197</span>
+                  <span className="preco-valor">R${VALOR_CONSULTA}</span>
                   <span className="preco-desc">sessão única · 30 minutos · ao vivo</span>
                 </div>
 
                 {!creditoDisponivel ? (
                   <button className="leitura-btn-cta" onClick={() => setModalPix(true)}>
-                    Adquirir Consulta Premium — R$ 197
+                    Adquirir Consulta Premium — R$ {VALOR_CONSULTA}
                   </button>
                 ) : (
                   <button className="leitura-btn-cta" onClick={() => router.push(`/dashboard/agendar/${consultationId}`)}>

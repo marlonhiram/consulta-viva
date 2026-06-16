@@ -1,24 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendEmail, SITE_URL } from '@/lib/email'
 import { EmailLeituraPronta } from '@/emails/leitura-pronta'
-
-// Service Role — ignora RLS para operações admin
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { enviarLeituraSchema } from '@/lib/validation'
 
 export async function POST(req: NextRequest) {
   try {
-    const { consultationId, analysisSummary } = await req.json()
+    const supabase = await createServerSupabaseClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    if (!consultationId || !analysisSummary?.trim()) {
+    const { data: role } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single()
+
+    if (role?.role !== 'admin') return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
+
+    const parsed = enviarLeituraSchema.safeParse(await req.json())
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'consultationId e analysisSummary são obrigatórios.' },
+        { error: 'Dados inválidos.', details: parsed.error.flatten() },
         { status: 400 }
       )
     }
+    const { consultationId, analysisSummary } = parsed.data
 
     // Verifica se a consulta existe e está em estado válido para receber leitura
     const { data: consultation, error: fetchError } = await supabaseAdmin

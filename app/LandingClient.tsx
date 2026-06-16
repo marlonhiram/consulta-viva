@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { TESTE_PRODUTO, VALOR_CONSULTA_FORMATADO } from '@/lib/constants'
 import './landing.css'
 
 const TESTIMONIALS = [
@@ -46,6 +47,12 @@ export default function LandingClient({ isLoggedIn }: { isLoggedIn: boolean }) {
   return (
     <>
       <div className="bg-glow" aria-hidden="true" />
+
+      {TESTE_PRODUTO && (
+        <div className="teste-produto-banner" role="status">
+          ⚠ Ambiente de teste de produto — cobranças e agendamentos são simulações, sem prestação real de serviço.
+        </div>
+      )}
 
       {/* ── NAV ── */}
       <nav className="nav">
@@ -139,7 +146,7 @@ export default function LandingClient({ isLoggedIn }: { isLoggedIn: boolean }) {
           <h2 className="final-title">Sua análise gratuita<br />está esperando</h2>
           <p className="final-sub">Sem compromisso. Sem cartão.</p>
           <div className="price-badge">
-            Consulta premium a partir de <strong>R$ 197,00</strong>
+            Consulta premium a partir de <strong>{VALOR_CONSULTA_FORMATADO}</strong>
           </div>
         </section>
 

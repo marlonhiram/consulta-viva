@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendEmail, SITE_URL } from '@/lib/email'
 import { EmailConsultaAgendada } from '@/emails/consulta-agendada'
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { agendarConsultaSchema } from '@/lib/validation'
 
 export async function POST(req: NextRequest) {
   // Verificar autenticação
@@ -15,12 +11,11 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-  const body = await req.json()
-  const { consultationId, startsAt } = body
-
-  if (!consultationId || !startsAt) {
-    return NextResponse.json({ error: 'Campos obrigatórios: consultationId, startsAt.' }, { status: 400 })
+  const parsed = agendarConsultaSchema.safeParse(await req.json())
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
   }
+  const { consultationId, startsAt } = parsed.data
 
   // Verificar que a consulta pertence ao usuário e está com crédito disponível
   const { data: consultation, error: consultError } = await supabaseAdmin

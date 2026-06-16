@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import { VALOR_CONSULTA_FORMATADO } from '@/lib/constants'
 import './triagem-retornante.css'
 
 interface Props {
@@ -104,7 +105,7 @@ function ModalPix({ consultationId, userEmail, userName, onPago }: {
         )}
         {step === 'qr' && (
           <>
-            <p className="pix-eyebrow">Consulta Premium · R$ 197,00</p>
+            <p className="pix-eyebrow">Consulta Premium · {VALOR_CONSULTA_FORMATADO}</p>
             <h2 className="pix-titulo">Pague via PIX</h2>
             <p className="pix-desc">
               Escaneie o QR Code ou copie o código. Após o pagamento, seu agendamento será liberado automaticamente.

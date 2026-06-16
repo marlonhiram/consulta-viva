@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendEmail } from '@/lib/email'
 import { EmailReembolsoConfirmado } from '@/emails/reembolso-confirmado'
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { VALOR_CONSULTA_FORMATADO } from '@/lib/constants'
+import { creditIdOnlySchema } from '@/lib/validation'
 
 export async function POST(req: NextRequest) {
   const supabase = await createServerSupabaseClient()
@@ -22,8 +19,11 @@ export async function POST(req: NextRequest) {
 
   if (role?.role !== 'admin') return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
 
-  const { creditId } = await req.json()
-  if (!creditId) return NextResponse.json({ error: 'creditId obrigatório.' }, { status: 400 })
+  const parsed = creditIdOnlySchema.safeParse(await req.json())
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
+  }
+  const { creditId } = parsed.data
 
   const { error } = await supabaseAdmin
     .from('credits')
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       await sendEmail({
         to: perfil.email,
         subject: 'Seu reembolso foi processado ✅',
-        template: <EmailReembolsoConfirmado nome={firstName} valor="R$ 100,00" />,
+        template: <EmailReembolsoConfirmado nome={firstName} valor={VALOR_CONSULTA_FORMATADO} />,
       })
     }
   }

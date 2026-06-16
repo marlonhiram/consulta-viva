@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
+import { VALOR_CONSULTA } from '@/lib/constants'
 
 export async function POST(req: NextRequest) {
   try {
@@ -87,7 +83,7 @@ export async function POST(req: NextRequest) {
               user_id: consultation.user_id,
               consultation_id: consultationId,
               origin: 'payment',
-              amount: 197.00,
+              amount: VALOR_CONSULTA,
               status: 'available',
             })
         }

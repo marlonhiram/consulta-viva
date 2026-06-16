@@ -1,20 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { sendEmail, SITE_URL } from '@/lib/email'
 import { EmailCancelamentoEspecialista } from '@/emails/cancelamento-especialista'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { VALOR_CONSULTA } from '@/lib/constants'
+import { cancelarConsultaAdminSchema } from '@/lib/validation'
 
 export async function POST(req: NextRequest) {
   try {
-    const { consultationId, reason } = await req.json()
+    const authClient = await createServerSupabaseClient()
+    const { data: { user } } = await authClient.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    if (!consultationId || !reason || reason.trim().length < 10) {
-      return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
+    const { data: role } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single()
+
+    if (role?.role !== 'admin') return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
+
+    const parsed = cancelarConsultaAdminSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
     }
+    const { consultationId, reason } = parsed.data
 
     // Busca a consulta
     const { data: consultation, error: fetchError } = await supabase
@@ -51,7 +61,7 @@ export async function POST(req: NextRequest) {
         user_id: consultation.user_id,
         consultation_id: consultationId,
         origin: 'cancellation_refund',
-        amount: 100.00,
+        amount: VALOR_CONSULTA,
         status: 'available',
       })
 
