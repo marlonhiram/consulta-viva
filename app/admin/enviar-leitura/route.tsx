@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       const firstName = perfil.full_name?.split(' ')[0] ?? 'cliente'
       await sendEmail({
         to: perfil.email,
-        subject: 'Sua leitura está pronta! 🔮',
+        subject: 'Sua avaliação está pronta! ✨',
         template: <EmailLeituraPronta nome={firstName} siteUrl={SITE_URL} consultationId={consultationId} />,
       })
     }

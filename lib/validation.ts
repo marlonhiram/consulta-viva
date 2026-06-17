@@ -48,7 +48,7 @@ export const photoUploadSchema = z.object({
       (f) => f.size <= MAX_FILE_SIZE_BYTES,
       'A foto deve ter no máximo 5MB'
     ),
-  hand_type: z.enum(['direita', 'esquerda', 'perfil']),
+  hand_type: z.enum(['direita', 'esquerda', 'perfil', 'rosto']),
 })
 
 export type PhotoUploadInput = z.infer<typeof photoUploadSchema>
@@ -114,8 +114,5 @@ export const aiTriagemSchema = z.object({
   photosConfirmed: z.boolean().optional(),
   consultationId: uuid.optional(),
   photos: z.array(z.string()).optional(),
-  isPromocao: z.boolean().optional(),
-  isRetornante: z.boolean().optional(),
-  handDominance: z.string().optional(),
 })
 export type AiTriagemInput = z.infer<typeof aiTriagemSchema>

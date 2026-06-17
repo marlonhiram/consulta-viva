@@ -13,7 +13,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, email, birth_date, hand_dominance, cpf')
+    .select('full_name, email')
     .eq('id', user.id)
     .single()
 
@@ -34,17 +34,6 @@ export default async function DashboardPage() {
     .eq('status', 'concluida')
     .order('created_at', { ascending: false })
 
-  // Detecta promoção ativa
-  const { data: promocao } = await supabase
-    .from('promocoes')
-    .select('id, limite, usadas')
-    .eq('ativa', true)
-    .eq('tipo', 'leitura_gratuita')
-    .gte('expira_em', new Date().toISOString())
-    .maybeSingle()
-
-  const isPromocao = !!promocao && promocao.usadas < promocao.limite
-
   const { data: creditos } = await supabase
     .from('credits')
     .select('id, origin, amount, status, created_at, used_at, used_for_consultation_id')
@@ -59,7 +48,6 @@ export default async function DashboardPage() {
         userInitials={initials}
         userEmail={profile?.email ?? user.email ?? ''}
         userFullName={profile?.full_name ?? ''}
-        isPromocao={isPromocao}
         consultation={consultation ?? null}
         historico={historico ?? []}
         creditos={creditos ?? []}

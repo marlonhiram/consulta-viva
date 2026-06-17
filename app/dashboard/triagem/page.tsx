@@ -22,7 +22,7 @@ export default async function TriagemPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, hand_dominance')
+    .select('full_name')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -41,22 +41,6 @@ export default async function TriagemPage() {
     redirect('/dashboard')
   }
 
-  const { data: promocao } = await supabase
-    .from('promocoes')
-    .select('id, limite, usadas')
-    .eq('ativa', true)
-    .eq('tipo', 'leitura_gratuita')
-    .gte('expira_em', new Date().toISOString())
-    .maybeSingle()
-
-  const isPromocao = !!promocao && promocao.usadas < promocao.limite
-
-  const jaTemGratuita = todasConsultas?.some(
-    c => c.tipo === 'gratuita' && c.status !== 'triagem'
-  ) ?? false
-  
-  if (isPromocao && jaTemGratuita) redirect('/dashboard')
-
   let consultationId = emTriagem?.id
 
   if (!consultationId) {
@@ -65,19 +49,12 @@ export default async function TriagemPage() {
       .insert({
         user_id: user.id,
         status: 'triagem',
-        tipo: isPromocao ? 'gratuita' : 'premium',
+        tipo: 'gratuita',
       })
       .select('id')
       .single()
 
     consultationId = nova?.id
-
-    if (isPromocao && promocao && nova) {
-      await supabase
-        .from('promocoes')
-        .update({ usadas: promocao.usadas + 1 })
-        .eq('id', promocao.id)
-    }
   }
 
   if (!consultationId) redirect('/dashboard')
@@ -87,8 +64,6 @@ export default async function TriagemPage() {
       consultationId={consultationId}
       userId={user.id}
       firstName={firstName}
-      isPromocao={isPromocao}
-      handDominance={profile?.hand_dominance ?? undefined}
     />
   )
 }

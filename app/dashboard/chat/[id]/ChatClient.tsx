@@ -438,7 +438,7 @@ async function downloadFoto(url: string, label: string) {
                 )}
                 {analysisSummary && (
                   <div className="chat-sidebar-section">
-                    <p className="chat-sidebar-label">Leitura gratuita</p>
+                    <p className="chat-sidebar-label">Consulta Avaliativa</p>
                     <div className="chat-sidebar-analise">
                       {analysisSummary.split('\n').filter(Boolean).slice(0, 6).map((linha, i) => (
                         <p key={i} className="chat-sidebar-analise-linha">{linha}</p>
@@ -474,7 +474,7 @@ async function downloadFoto(url: string, label: string) {
                 className="chat-triagem-toggle"
                 onClick={() => setMostrarTriagem(v => !v)}
               >
-                <span>📋 Ver resumo da sua leitura gratuita</span>
+                <span>📋 Ver resumo da sua avaliação</span>
                 <span>{mostrarTriagem ? '▲' : '▼'}</span>
               </button>
               {mostrarTriagem && (
@@ -624,7 +624,7 @@ async function downloadFoto(url: string, label: string) {
         <div className="chat-modal-overlay" onClick={() => setMostrarTriagem(false)}>
           <div className="chat-modal" onClick={e => e.stopPropagation()}>
             <div className="chat-modal-header">
-              <span>📋 Leitura gratuita</span>
+              <span>📋 Consulta Avaliativa</span>
               <button onClick={() => setMostrarTriagem(false)}>×</button>
             </div>
             <div className="chat-modal-triagem">

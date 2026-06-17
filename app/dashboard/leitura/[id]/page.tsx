@@ -5,7 +5,7 @@ import LeituraClient from './LeituraClient'
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
-  return { title: 'Minha Leitura — Quiros' }
+  return { title: 'Minha Avaliação — ConsultaViva' }
 }
 
 export default async function LeituraPage({

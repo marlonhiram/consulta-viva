@@ -21,7 +21,7 @@ export default function LandingClient({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [closing, setClosing] = useState(false)
 
   const ctaHref   = isLoggedIn ? '/dashboard' : '/cadastro'
-  const ctaLabel  = isLoggedIn ? 'Acessar minha área' : 'Receber análise gratuita'
+  const ctaLabel  = isLoggedIn ? 'Acessar minha área' : 'Receber Avaliação gratuita'
 
   function openSheet() { setSheetOpen(true); setClosing(false) }
   function closeSheet() {
@@ -143,7 +143,7 @@ export default function LandingClient({ isLoggedIn }: { isLoggedIn: boolean }) {
         {/* CTA Final */}
         <section className="final-cta">
           <p className="final-label">Comece agora</p>
-          <h2 className="final-title">Sua análise gratuita<br />está esperando</h2>
+          <h2 className="final-title">Sua avaliação gratuita<br />está esperando</h2>
           <p className="final-sub">Sem compromisso. Sem cartão.</p>
           <div className="price-badge">
             Consulta premium a partir de <strong>{VALOR_CONSULTA_FORMATADO}</strong>

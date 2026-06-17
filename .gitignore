@@ -44,6 +44,7 @@ next-env.d.ts
 "📜 CONTEXTO DO PROJETO.md"
 CONTEXTO*
 Prompt_contexto/
+.claude/
 
 .vercel
 .env*.local

@@ -18,7 +18,7 @@ interface PhotoPreview {
   label: string
 }
 
-const STEPS = ['Dados Pessoais', 'Preferências', 'Fotos', 'Conclusão']
+const STEPS = ['Dados Pessoais', 'Seu Contexto', 'Foto', 'Conclusão']
 const MAX_SIZE = 5 * 1024 * 1024
 const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp']
 
@@ -34,11 +34,9 @@ interface TriagemProps {
   consultationId: string
   userId: string
   firstName: string
-  isPromocao?: boolean
-  handDominance?: string
 }
 
-export default function TriagemClient({ consultationId, userId, firstName, isPromocao, handDominance }: TriagemProps) {
+export default function TriagemClient({ consultationId, userId, firstName }: TriagemProps) {
   const router = useRouter()
   const supabase = createClient()
   const [messages, setMessages] = useState<Message[]>([])
@@ -46,7 +44,6 @@ export default function TriagemClient({ consultationId, userId, firstName, isPro
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(0)
   const [showUploader, setShowUploader] = useState(false)
-  const [showDominance, setShowDominance] = useState(false)
   const [photos, setPhotos] = useState<PhotoPreview[]>([])
   const [drag, setDrag] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -54,24 +51,15 @@ export default function TriagemClient({ consultationId, userId, firstName, isPro
   const [confirming, setConfirming] = useState(false)
   const initializedRef = useRef(false)
 
-  // ── Quantidade de fotos exigida pela lateralidade (2 = destro, 4 = canhoto) ──
-  const [requiredPhotos, setRequiredPhotos] = useState<number>(2)
+  const requiredPhotos = 1
 
   const photoLabels: Record<number, string[]> = {
-    2: ['Palma direita', 'Lateral direita'],
-    4: ['Palma esquerda', 'Lateral esquerda', 'Palma direita', 'Lateral direita'],
+    1: ['Foto frontal do rosto'],
   }
 
   const photoInstructions: Record<number, { group?: string; label: string; desc: string }[]> = {
-    2: [
-      { label: 'Palma da mão direita', desc: 'Mão aberta, câmera próxima, mostrando as linhas' },
-      { label: 'Lateral da mão direita', desc: 'Na altura do dedo mindinho' },
-    ],
-    4: [
-      { group: 'Mão Esquerda (dominante)', label: 'Palma da mão esquerda', desc: 'Mão aberta, câmera próxima, mostrando as linhas' },
-      { label: 'Lateral da mão esquerda', desc: 'Na altura do dedo mindinho' },
-      { group: 'Mão Direita', label: 'Palma da mão direita', desc: 'Mão aberta, câmera próxima, mostrando as linhas' },
-      { label: 'Lateral da mão direita', desc: 'Na altura do dedo mindinho' },
+    1: [
+      { label: 'Foto frontal do rosto', desc: 'Ambiente bem iluminado, fundo neutro, rosto centralizado e completamente visível' },
     ],
   }
 
@@ -90,13 +78,6 @@ export default function TriagemClient({ consultationId, userId, firstName, isPro
   }, [messages, loading])
 
   // ── Foco automático após resposta da IA ──
-  useEffect(() => {
-    if (!loading && !showUploader && !done) {
-      inputRef.current?.focus()
-    }
-  }, [loading, showUploader, done])
-
-  // Inicia a conversa — apenas uma vez
   useEffect(() => {
     if (!loading && !showUploader && !done) {
       inputRef.current?.focus()
@@ -173,8 +154,6 @@ if (photosConfirmed && photos.length > 0) {
           consultationId,
           userId,
           photos: base64Photos,
-          isPromocao,
-          handDominance,
         }),
       })
 
@@ -196,15 +175,9 @@ if (photosConfirmed && photos.length > 0) {
         addMessage('system', `⚠️ ${data.photoQualityWarning}`)
       }
 
-      // ── Atualiza quantidade de fotos conforme lateralidade ──
-      if (data.photoCount) {
-        setRequiredPhotos(data.photoCount)
-      }
-
       if (data.showUploader && !photosEnviadasRef.current) { setShowUploader(true); setStep(2) }
-      if (data.showDominance) { setShowDominance(true); setStep(1) }
-      if (data.isComplete)    { setStep(3); setDone(true) }
-      else if (!data.showUploader && !data.showDominance && step === 0 && geminiHistory.current.length > 2) {
+      if (data.isComplete) { setStep(3); setDone(true) }
+      else if (!data.showUploader && step === 0 && geminiHistory.current.length > 2) {
         setStep(1)
       }
     } catch (err) {
@@ -219,21 +192,13 @@ if (photosConfirmed && photos.length > 0) {
     const text = input.trim()
     if (!text || loading) return
     setInput('')
-    setShowDominance(false)
     addMessage('user', text)
     await callGemini(text)
-    // ── Foco após envio ──
     setTimeout(() => inputRef.current?.focus(), 50)
   }
 
   function handleKey(e: React.KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
-  }
-
-  function handleDominance(value: 'Destro' | 'Canhoto') {
-    setShowDominance(false)
-    addMessage('user', value)
-    callGemini(value)
   }
 
   function processFiles(files: FileList | null) {
@@ -276,8 +241,7 @@ if (photosConfirmed && photos.length > 0) {
     setShowUploader(false)
     photosEnviadasRef.current = true
 
-    const labels = photos.map(p => p.label).join(', ')
-    const userMsg = `Enviei as ${photos.length} fotos solicitadas (${labels}).`
+    const userMsg = 'Enviei a foto do rosto solicitada.'
     addMessage('user', userMsg)
 
     try {
@@ -346,14 +310,6 @@ if (photosConfirmed && photos.length > 0) {
         )}
       </div>
 
-      {/* Quick replies — mão dominante */}
-      {showDominance && !loading && (
-        <div className="quick-replies">
-          <button className="qr-btn" onClick={() => handleDominance('Destro')}>Destro(a)</button>
-          <button className="qr-btn" onClick={() => handleDominance('Canhoto')}>Canhoto(a)</button>
-        </div>
-      )}
-
       {/* Previews de fotos */}
       {photos.length > 0 && (
         <div className="photo-previews">
@@ -372,7 +328,7 @@ if (photosConfirmed && photos.length > 0) {
       {/* Cards de instrução de fotos */}
       {showUploader && !loading && (
         <div className="photo-instructions">
-          {(photoInstructions[requiredPhotos] ?? photoInstructions[2]).map((item, i) => (
+          {(photoInstructions[requiredPhotos] ?? photoInstructions[1]).map((item, i) => (
             <Fragment key={i}>
               {item.group && (
                 <div className="photo-instruction-group">{item.group}</div>
@@ -402,7 +358,6 @@ if (photosConfirmed && photos.length > 0) {
   ref={fileInputRef}
   type="file"
   accept="image/jpeg,image/png,image/webp"
-  multiple
   style={{ display: 'none' }}
   onChange={e => processFiles(e.target.files)}
 />
@@ -415,11 +370,11 @@ if (photosConfirmed && photos.length > 0) {
   style={{ display: 'none' }}
   onChange={e => processFiles(e.target.files)}
 />
-<span className="upload-icon">🖐</span>
+<span className="upload-icon">🤳</span>
 <span className="upload-title">
   {photos.length === 0
-    ? 'Como deseja enviar as fotos?'
-    : `${photos.length}/${requiredPhotos} foto(s) adicionada(s)`}
+    ? 'Como deseja enviar a foto?'
+    : `Foto adicionada`}
 </span>
 <div className="upload-btns">
   <button

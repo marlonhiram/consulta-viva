@@ -181,7 +181,7 @@ export default function LeituraClient({
           {/* Topo */}
           <div className="leitura-topo">
             <p className="leitura-eyebrow">Consultoria Online</p>
-            <h1 className="leitura-titulo">Sua Análise</h1>
+            <h1 className="leitura-titulo">Sua Avaliação</h1>
             <p className="leitura-data">Elaborada em {dataFormatada}</p>
           </div>
 
@@ -224,13 +224,13 @@ export default function LeituraClient({
 
                 <p className="leitura-cta-eyebrow">O próximo passo</p>
                 <h2 className="leitura-cta-titulo">
-                  Sua leitura revelou padrões únicos
+                  Sua avaliação revelou padrões únicos
                 </h2>
                 <p className="leitura-cta-texto">
-                  A análise que você acabou de ler é apenas uma introdução ao que as
-                  suas mãos revelam. Em uma consulta ao vivo de 30 minutos, nossa
-                  especialista aprofunda cada traço da sua personalidade, responde
-                  suas dúvidas e entrega uma leitura personalizada e interativa —
+                  A avaliação que você acabou de ler é apenas uma introdução ao que o
+                  seu perfil revela. Em uma consulta ao vivo de 30 minutos, nossa
+                  especialista aprofunda cada aspecto da sua personalidade, responde
+                  suas dúvidas e entrega uma análise personalizada e interativa —
                   uma experiência que vai além do texto.
                 </p>
 
@@ -241,7 +241,7 @@ export default function LeituraClient({
                   </div>
                   <div className="leitura-beneficio">
                     <span className="beneficio-icon">✦</span>
-                    <span>Análise aprofundada das suas linhas</span>
+                    <span>Análise comportamental aprofundada</span>
                   </div>
                   <div className="leitura-beneficio">
                     <span className="beneficio-icon">✦</span>
