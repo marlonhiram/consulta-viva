@@ -42,6 +42,8 @@ export async function POST(req: NextRequest) {
 
     // Cria o pagamento PIX no Mercado Pago
 
+    console.log('[criar-pix] token presente:', !!process.env.MP_ACCESS_TOKEN, '| primeiros chars:', process.env.MP_ACCESS_TOKEN?.slice(0, 8))
+
     const mpRes = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
