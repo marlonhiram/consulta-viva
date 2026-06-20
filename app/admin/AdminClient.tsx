@@ -7,6 +7,7 @@ import { AgendaTab } from './components/tabs/AgendaTab'
 import { ReembolsosTab } from './components/tabs/ReembolsosTab'
 import { WorkView } from './components/WorkView'
 import type { Tab, MockConsultation } from './types'
+import { LogoutBtn } from '@/app/dashboard/components/LogoutBtn'
 
 /* ─────────────────────────────────────────────
    COMPONENTE PRINCIPAL
@@ -79,7 +80,10 @@ export default function AdminClient() {
     <div className="admin">
       <header className="admin__topbar">
         <div className="admin__logo">ConsultaViva <span>Painel da Especialista</span></div>
-        <div className="admin__user"><span>👤 Bem-vinda</span></div>
+        <div className="admin__user" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span>👤 Bem-vinda</span>
+          <LogoutBtn />
+        </div>
       </header>
 
       <nav className="admin__tabs">

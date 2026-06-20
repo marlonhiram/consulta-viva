@@ -1,8 +1,24 @@
 # ConsultaViva
 
+> **Deploy:** [project-bijz1.vercel.app](https://project-bijz1.vercel.app)
+
 Plataforma SaaS fullstack para consultorias comportamentais online. O cliente passa por uma triagem assistida por IA, envia uma foto para avaliação, realiza o pagamento via PIX e entra em uma sessão de chat ao vivo com a especialista — tudo dentro da plataforma, sem sair para WhatsApp ou terceiros.
 
 Projeto desenvolvido para explorar integrações reais de IA generativa, pagamentos, realtime, e-mail transacional e dashboard administrativo completo.
+
+## Status
+
+| Integração | Status |
+|-----------|--------|
+| Supabase Auth + Database | ✅ Funcionando |
+| Triagem IA (Google Gemini 2.5 Flash) | ✅ Funcionando |
+| Upload de foto de rosto | ✅ Funcionando |
+| Pagamento PIX (Mercado Pago) | ✅ Funcionando |
+| Webhook Mercado Pago (crédito automático) | ✅ Funcionando |
+| E-mails transacionais (Resend) | ✅ Funcionando |
+| Painel administrativo | ✅ Funcionando |
+| Chat ao vivo | ✅ Funcionando |
+| Deploy (Vercel) | ✅ Funcionando |
 
 ---
 
