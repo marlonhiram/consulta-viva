@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         transaction_amount: VALOR_CONSULTA,
-        description: 'Consulta Premium de Quiromancia — Quiros',
+        description: 'Consulta Premium — ConsultaViva',
         payment_method_id: 'pix',
         payer: {
           email: userEmail,
