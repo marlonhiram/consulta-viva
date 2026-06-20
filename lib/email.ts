@@ -3,7 +3,7 @@ import { ReactElement } from 'react'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const FROM = 'Consulta Viva <yurnero14@gmail.com>'
+const FROM = 'Consulta Viva <onboarding@resend.dev>'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || ''
 
 export { SITE_URL }
