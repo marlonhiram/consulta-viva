@@ -1147,7 +1147,7 @@
   color: var(--gold-dk);
 }
 
-/* Lista de créditos */
+/* Lista de creditos */
 .creditos-list {
   display: flex;
   flex-direction: column;
