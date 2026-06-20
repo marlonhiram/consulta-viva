@@ -17,13 +17,12 @@ type Mode = 'cadastro' | 'login'
   const [mode, setMode] = useState<Mode>('cadastro')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [form, setForm] = useState({ 
-    full_name: '', 
-    email: '', 
+  const [form, setForm] = useState({
+    full_name: '',
+    email: '',
     phone: '',
-    password: '', 
+    password: '',
     confirm_password: '',
-    hand_dominance: '' 
   })
   // ── Estados do fluxo de confirmação de e-mail ──
   const [emailSent, setEmailSent] = useState(false)
@@ -78,7 +77,6 @@ type Mode = 'cadastro' | 'login'
         email: form.email,
         full_name: form.full_name,
         phone: form.phone,
-        hand_dominance: form.hand_dominance,
       }),
     })
     const json = await res.json()
@@ -113,10 +111,9 @@ type Mode = 'cadastro' | 'login'
           email: form.email,
           password: form.password,
           options: {
-            data: { 
+            data: {
               full_name: form.full_name,
               phone: form.phone,
-              hand_dominance: form.hand_dominance,
             },
             emailRedirectTo: `...`,
           },
@@ -314,27 +311,6 @@ type Mode = 'cadastro' | 'login'
     </div>
   )}
 
-  {mode === 'cadastro' && (
-    <div className="field">
-      <label>Com qual mão você escreve?</label>
-      <div className="dominance-btns">
-        <button
-          type="button"
-          className={`dominance-btn ${form.hand_dominance === 'destro' ? 'active' : ''}`}
-          onClick={() => setForm(p => ({ ...p, hand_dominance: 'destro' }))}
-        >
-          ✋ Mão Direita
-        </button>
-        <button
-          type="button"
-          className={`dominance-btn ${form.hand_dominance === 'canhoto' ? 'active' : ''}`}
-          onClick={() => setForm(p => ({ ...p, hand_dominance: 'canhoto' }))}
-        >
-          🤚 Mão Esquerda
-        </button>
-      </div>
-    </div>
-  )}
 
               {error && <div className="cad-alert">{error}</div>}
 
