@@ -58,7 +58,6 @@ export async function POST(req: NextRequest) {
           first_name: userName.split(' ')[0],
           last_name: userName.split(' ').slice(1).join(' ') || '-',
         },
-        notification_url: `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/mercadopago`,
         metadata: {
           consultation_id: consultationId,
         },

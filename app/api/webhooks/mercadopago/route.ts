@@ -20,21 +20,31 @@ function verificarAssinaturaMP(
     return false
   }
 
-  if (!xSignature || !xRequestId) return false
+  if (!xSignature) { console.error('[webhook-mp] Header x-signature ausente.'); return false }
+  if (!xRequestId) { console.error('[webhook-mp] Header x-request-id ausente.'); return false }
 
   // Extrai ts e v1 do header x-signature: "ts=TIMESTAMP,v1=HASH"
   const parts = Object.fromEntries(
-    xSignature.split(',').map(p => p.split('=') as [string, string])
+    xSignature.split(',').map(p => {
+      const idx = p.indexOf('=')
+      return [p.slice(0, idx), p.slice(idx + 1)] as [string, string]
+    })
   )
   const ts = parts['ts']
   const v1 = parts['v1']
 
-  if (!ts || !v1) return false
+  if (!ts) { console.error('[webhook-mp] Campo ts ausente no x-signature:', xSignature); return false }
+  if (!v1) { console.error('[webhook-mp] Campo v1 ausente no x-signature:', xSignature); return false }
 
   const template = `id:${paymentId};request-id:${xRequestId};ts:${ts}`
   const hash = createHmac('sha256', secret).update(template).digest('hex')
 
-  return hash === v1
+  if (hash !== v1) {
+    console.error('[webhook-mp] Hash não bate. template:', template, '| computed:', hash.slice(0, 8) + '... | expected:', v1.slice(0, 8) + '...')
+    return false
+  }
+
+  return true
 }
 
 export async function POST(req: NextRequest) {
