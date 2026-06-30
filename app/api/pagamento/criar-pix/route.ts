@@ -14,7 +14,17 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
     }
-    const { consultationId, userEmail, userName } = parsed.data
+    const { consultationId } = parsed.data
+
+    // Dados do pagador vêm sempre do perfil autenticado, nunca do body
+    const { data: perfil } = await supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('id', user.id)
+      .single()
+    if (!perfil) return NextResponse.json({ error: 'Perfil não encontrado.' }, { status: 404 })
+    const userEmail = perfil.email
+    const userName = perfil.full_name ?? '-'
 
     // Garante que a consulta pertence ao usuário autenticado
     const { data: consultation } = await supabase

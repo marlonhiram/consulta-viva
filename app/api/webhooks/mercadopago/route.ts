@@ -12,6 +12,15 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
 
+    // Anti-replay: rejeitar notificações com mais de 15 minutos
+    if (body.date_created) {
+      const eventAge = Date.now() - new Date(body.date_created).getTime()
+      if (eventAge > 15 * 60 * 1000) {
+        console.warn('[webhook-mp] Notificação antiga ignorada — age:', Math.round(eventAge / 1000), 's')
+        return NextResponse.json({ ok: true })
+      }
+    }
+
     if (body.type !== 'payment') {
       return NextResponse.json({ ok: true })
     }

@@ -58,8 +58,6 @@ const uuid = z.string().uuid('ID inválido')
 
 export const criarPixSchema = z.object({
   consultationId: uuid,
-  userEmail: z.string().email('E-mail inválido'),
-  userName: z.string().min(1, 'Nome obrigatório').max(120),
 })
 export type CriarPixInput = z.infer<typeof criarPixSchema>
 
@@ -104,15 +102,21 @@ export const cancelarConsultaAdminSchema = z.object({
 })
 export type CancelarConsultaAdminInput = z.infer<typeof cancelarConsultaAdminSchema>
 
+const MAX_FOTO_BASE64_TRIAGEM = 7 * 1024 * 1024 // ~5MB em base64
+
 export const aiTriagemSchema = z.object({
   messages: z.array(
     z.object({
       role: z.enum(['user', 'model']),
-      parts: z.array(z.object({ text: z.string() })).length(1),
+      parts: z.array(z.object({ text: z.string().max(8000, 'Mensagem muito longa') })).length(1),
     })
-  ),
+  ).max(50, 'Histórico de conversa excede o limite permitido'),
   photosConfirmed: z.boolean().optional(),
   consultationId: uuid.optional(),
-  photos: z.array(z.string()).optional(),
+  photos: z.array(
+    z.string()
+      .max(MAX_FOTO_BASE64_TRIAGEM, 'Foto excede o tamanho máximo de 5MB')
+      .regex(/^data:image\/(jpeg|png|webp);base64,/, 'Formato de imagem inválido — use JPEG, PNG ou WEBP')
+  ).max(5).optional(),
 })
 export type AiTriagemInput = z.infer<typeof aiTriagemSchema>

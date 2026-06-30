@@ -76,6 +76,17 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await authClient.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
+    // Rate limiting: máximo de 20 mensagens enviadas pelo usuário no último minuto
+    const { count: msgCount } = await supabase
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('sender_id', user.id)
+      .eq('is_ai', false)
+      .gte('created_at', new Date(Date.now() - 60_000).toISOString())
+    if ((msgCount ?? 0) >= 20) {
+      return NextResponse.json({ error: 'Muitas requisições. Aguarde um momento.' }, { status: 429 })
+    }
+
     const parsed = aiTriagemSchema.safeParse(await request.json())
     if (!parsed.success) {
       return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })

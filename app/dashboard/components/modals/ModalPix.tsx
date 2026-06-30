@@ -30,7 +30,7 @@ export function ModalPix({
       const res = await fetch('/api/pagamento/criar-pix', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ consultationId, userEmail, userName }),
+        body: JSON.stringify({ consultationId }),
       })
       const data = await res.json()
       if (!res.ok) { setStep('erro'); return }
