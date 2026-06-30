@@ -1,59 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createHmac } from 'crypto'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { VALOR_CONSULTA } from '@/lib/constants'
 
-/**
- * Verifica a assinatura HMAC-SHA256 do webhook do Mercado Pago.
- * Documentação: https://www.mercadopago.com.br/developers/pt/docs/your-integrations/notifications/webhooks
- *
- * Template assinado: id:<paymentId>;request-id:<xRequestId>;ts:<ts>
- */
-function verificarAssinaturaMP(
-  paymentId: string,
-  xSignature: string | null,
-  xRequestId: string | null,
-): boolean {
-  const secret = process.env.MP_WEBHOOK_SECRET
-  if (!secret) {
-    console.error('[webhook-mp] MP_WEBHOOK_SECRET não configurado.')
-    return false
-  }
-
-  if (!xSignature) { console.error('[webhook-mp] Header x-signature ausente.'); return false }
-  if (!xRequestId) { console.error('[webhook-mp] Header x-request-id ausente.'); return false }
-
-  // Extrai ts e v1 do header x-signature: "ts=TIMESTAMP,v1=HASH"
-  const parts = Object.fromEntries(
-    xSignature.split(',').map(p => {
-      const idx = p.indexOf('=')
-      return [p.slice(0, idx), p.slice(idx + 1)] as [string, string]
-    })
-  )
-  const ts = parts['ts']
-  const v1 = parts['v1']
-
-  if (!ts) { console.error('[webhook-mp] Campo ts ausente no x-signature:', xSignature); return false }
-  if (!v1) { console.error('[webhook-mp] Campo v1 ausente no x-signature:', xSignature); return false }
-
-  const template = `id:${paymentId};request-id:${xRequestId};ts:${ts}`
-  // O MP gera o secret como bytes aleatórios representados em hex.
-  // É necessário decodificar o hex para obter os bytes reais antes de usar como chave HMAC.
-  const secretBytes = Buffer.from(secret, 'hex')
-  const hash = createHmac('sha256', secretBytes).update(template).digest('hex')
-
-  if (hash !== v1) {
-    console.error('[webhook-mp] Hash não bate. template:', template, '| computed:', hash.slice(0, 8) + '... | expected:', v1.slice(0, 8) + '...')
-    return false
-  }
-
-  return true
-}
-
 export async function POST(req: NextRequest) {
   try {
-    const xSignature = req.headers.get('x-signature')
-    const xRequestId = req.headers.get('x-request-id')
+    // Verificação por token de URL — só o MP conhece a URL completa com o token
+    const token = new URL(req.url).searchParams.get('token')
+    if (!token || token !== process.env.WEBHOOK_TOKEN) {
+      return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
+    }
 
     const body = await req.json()
 
@@ -64,16 +19,10 @@ export async function POST(req: NextRequest) {
     const paymentId = String(body.data?.id ?? '')
     if (!paymentId) return NextResponse.json({ ok: true })
 
-    if (!verificarAssinaturaMP(paymentId, xSignature, xRequestId)) {
-      console.error('[webhook-mp] Assinatura inválida — requisição rejeitada.')
-      return NextResponse.json({ error: 'Assinatura inválida.' }, { status: 401 })
-    }
-
     // Re-busca o pagamento na API do MP para confirmar o status real
+    // Isso é a verificação de segurança primária: nunca confiamos no body do webhook
     const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-      headers: {
-        'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
-      },
+      headers: { 'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}` },
     })
 
     const mpData = await mpRes.json()
