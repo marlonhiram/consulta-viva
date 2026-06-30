@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { z } from 'zod'
+
+const MAX_FOTO_BASE64 = 7 * 1024 * 1024 // ~5MB em base64 (base64 expande ~33%)
+
+const retornanteSchema = z.object({
+  photos: z
+    .array(
+      z.string()
+        .max(MAX_FOTO_BASE64, 'Foto excede o tamanho máximo de 5MB')
+        .regex(/^data:image\/(jpeg|png|webp);base64,/, 'Formato de imagem inválido — use JPEG, PNG ou WEBP')
+    )
+    .min(1, 'Envie ao menos uma foto')
+    .max(5, 'Máximo de 5 fotos por envio'),
+})
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,7 +22,12 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
 
-    const { photos } = await req.json() // base64[]
+    const parsed = retornanteSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 })
+    }
+
+    const { photos } = parsed.data
 
     // Cria a nova consultation premium já como concluída
     const { data: consultation, error: consultError } = await supabaseAdmin

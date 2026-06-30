@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { LogoutButton } from '@/components/shared/LogoutButton'
 import { redirect } from 'next/navigation'
 
@@ -13,13 +14,13 @@ export default async function AtendimentoPage({ params }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/')
 
-  const { data: { session } } = await supabase.auth.getSession()
-  const token = session?.access_token
-  const userRole = token
-    ? JSON.parse(atob(token.split('.')[1]))?.user_role
-    : null
+  const { data: roleData } = await supabaseAdmin
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single()
 
-  if (userRole !== 'admin') redirect('/dashboard')
+  if (!roleData || roleData.role !== 'admin') redirect('/dashboard')
 
   return (
     <main className="min-h-dvh bg-quiros-dark flex flex-col">

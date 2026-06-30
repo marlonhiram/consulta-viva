@@ -65,7 +65,7 @@ export type CriarPixInput = z.infer<typeof criarPixSchema>
 
 export const agendarConsultaSchema = z.object({
   consultationId: uuid,
-  startsAt: z.string().datetime({ message: 'Data/hora inválida' }).or(z.string().min(1)),
+  startsAt: z.string().datetime({ message: 'Data/hora inválida — use formato ISO 8601' }),
 })
 export type AgendarConsultaInput = z.infer<typeof agendarConsultaSchema>
 

@@ -45,6 +45,26 @@ next-env.d.ts
 CONTEXTO*
 Prompt_contexto/
 .claude/
+_claude/
+
+# certificados e chaves
+*.key
+*.p12
+*.pfx
+*.cer
+
+# credenciais de serviços externos
+serviceAccountKey.json
+
+# configurações locais (.NET / Azure Functions)
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Staging.json
+secrets.json
+local.settings.json
+
+# padrão adicional de env
+*.env
 
 .vercel
 .env*.local

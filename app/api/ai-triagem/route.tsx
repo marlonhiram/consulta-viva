@@ -16,7 +16,7 @@ function buildSystemPrompt() {
 Seu papel é conduzir a triagem inicial antes do cliente ser atendido pela especialista.
 
 === REGRAS DE OURO ===
-1. Avance apenas UMA etapa por vez.
+1. Avance apen as UMA etapa por vez.
 2. Siga o texto de cada etapa de forma fiel — não reescreva nem resuma com outras palavras.
 3. NÃO peça o nome — o cliente já foi identificado.
 4. A avaliação é feita pela especialista humana com 38 anos de experiência — NUNCA pela IA.

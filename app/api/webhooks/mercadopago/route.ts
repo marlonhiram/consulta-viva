@@ -1,20 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHmac } from 'crypto'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { VALOR_CONSULTA } from '@/lib/constants'
 
+/**
+ * Verifica a assinatura HMAC-SHA256 do webhook do Mercado Pago.
+ * Documentação: https://www.mercadopago.com.br/developers/pt/docs/your-integrations/notifications/webhooks
+ *
+ * Template assinado: id:<paymentId>;request-id:<xRequestId>;ts:<ts>
+ */
+function verificarAssinaturaMP(
+  paymentId: string,
+  xSignature: string | null,
+  xRequestId: string | null,
+): boolean {
+  const secret = process.env.MP_WEBHOOK_SECRET
+  if (!secret) {
+    console.error('[webhook-mp] MP_WEBHOOK_SECRET não configurado.')
+    return false
+  }
+
+  if (!xSignature || !xRequestId) return false
+
+  // Extrai ts e v1 do header x-signature: "ts=TIMESTAMP,v1=HASH"
+  const parts = Object.fromEntries(
+    xSignature.split(',').map(p => p.split('=') as [string, string])
+  )
+  const ts = parts['ts']
+  const v1 = parts['v1']
+
+  if (!ts || !v1) return false
+
+  const template = `id:${paymentId};request-id:${xRequestId};ts:${ts}`
+  const hash = createHmac('sha256', secret).update(template).digest('hex')
+
+  return hash === v1
+}
+
 export async function POST(req: NextRequest) {
   try {
+    const xSignature = req.headers.get('x-signature')
+    const xRequestId = req.headers.get('x-request-id')
+
     const body = await req.json()
 
-    // MP envia type=payment quando um pagamento é atualizado
     if (body.type !== 'payment') {
       return NextResponse.json({ ok: true })
     }
 
-    const paymentId = String(body.data?.id)
+    const paymentId = String(body.data?.id ?? '')
     if (!paymentId) return NextResponse.json({ ok: true })
 
-    // Busca o pagamento no MP para confirmar o status
+    if (!verificarAssinaturaMP(paymentId, xSignature, xRequestId)) {
+      console.error('[webhook-mp] Assinatura inválida — requisição rejeitada.')
+      return NextResponse.json({ error: 'Assinatura inválida.' }, { status: 401 })
+    }
+
+    // Re-busca o pagamento na API do MP para confirmar o status real
     const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
       headers: {
         'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
@@ -29,14 +71,13 @@ export async function POST(req: NextRequest) {
     }
 
     const consultationId = mpData.metadata?.consultation_id
-    const status = mpData.status // approved, pending, rejected, etc
+    const status = mpData.status
 
     if (!consultationId) {
       console.error('[webhook-mp] consultation_id não encontrado no metadata')
       return NextResponse.json({ ok: true })
     }
 
-    // Atualiza o pagamento no banco
     const { data: payment } = await supabase
       .from('payments')
       .select('id, status')
@@ -58,9 +99,7 @@ export async function POST(req: NextRequest) {
       })
       .eq('id', payment.id)
 
-    // Se aprovado: gera crédito para o cliente
     if (status === 'approved' && payment.status !== 'paid') {
-      // Busca user_id da consulta
       const { data: consultation } = await supabase
         .from('consultations')
         .select('user_id')
@@ -68,7 +107,6 @@ export async function POST(req: NextRequest) {
         .single()
 
       if (consultation) {
-        // Verifica se já existe crédito para evitar duplicata
         const { data: creditExisting } = await supabase
           .from('credits')
           .select('id')
@@ -94,6 +132,6 @@ export async function POST(req: NextRequest) {
 
   } catch (err) {
     console.error('[webhook-mp]', err)
-    return NextResponse.json({ ok: true }) // sempre 200 para o MP não retentar
+    return NextResponse.json({ ok: true })
   }
 }

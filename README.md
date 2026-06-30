@@ -156,6 +156,8 @@ app/
     ├── salvar-perfil/route.ts          # Atualização de dados do perfil
     └── promo/perfil/route.tsx          # Rota de perfil para fluxo alternativo
 
+middleware.ts                            # Renova sessão Supabase a cada request + protege rotas autenticadas
+
 lib/
 ├── supabase.ts                         # Cliente browser (anon key)
 ├── supabase-server.ts                  # Cliente SSR com cookies
@@ -245,6 +247,8 @@ MP_ACCESS_TOKEN=
 RESEND_API_KEY=
 
 CRON_SECRET=
+MP_WEBHOOK_SECRET=
+ESPECIALISTA_EMAIL=
 ```
 
 > O banco de dados requer as tabelas descritas acima com as políticas de RLS configuradas. As consultas com `supabase-admin.ts` (service role) bypassam RLS e são usadas apenas em rotas de API protegidas por autenticação.

@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function GET(req: NextRequest) {
+  const authClient = await createServerSupabaseClient()
+  const { data: { user } } = await authClient.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
+
   const { searchParams } = new URL(req.url)
   const dateParam = searchParams.get('date') // formato: 2026-04-25
 
