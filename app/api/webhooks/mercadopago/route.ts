@@ -37,7 +37,10 @@ function verificarAssinaturaMP(
   if (!v1) { console.error('[webhook-mp] Campo v1 ausente no x-signature:', xSignature); return false }
 
   const template = `id:${paymentId};request-id:${xRequestId};ts:${ts}`
-  const hash = createHmac('sha256', secret).update(template).digest('hex')
+  // O MP gera o secret como bytes aleatórios representados em hex.
+  // É necessário decodificar o hex para obter os bytes reais antes de usar como chave HMAC.
+  const secretBytes = Buffer.from(secret, 'hex')
+  const hash = createHmac('sha256', secretBytes).update(template).digest('hex')
 
   if (hash !== v1) {
     console.error('[webhook-mp] Hash não bate. template:', template, '| computed:', hash.slice(0, 8) + '... | expected:', v1.slice(0, 8) + '...')
