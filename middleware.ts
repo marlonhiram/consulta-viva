@@ -1,25 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createMiddlewareClient } from '@/lib/supabase-middleware'
 
+// Apenas páginas — rotas de API retornam 401 e não precisam de redirect
 const PROTECTED_ROUTES = [
   '/dashboard',
   '/admin',
-  '/api/ai-triagem',
-  '/api/agendar-consulta',
-  '/api/available-slots',
-  '/api/cancelar-consulta-cliente',
-  '/api/solicitar-reembolso',
-  '/api/pagamento',
-  '/api/chat',
-  '/api/retornante',
-  '/api/salvar-perfil',
-  '/api/promo/perfil',
-  '/api/enviar-boas-vindas',
-  '/admin/consultas',
-  '/admin/cancelar-consulta',
-  '/admin/marcar-reembolso',
-  '/admin/enviar-leitura',
-  '/admin/recusar-fotos',
 ]
 
 export async function middleware(request: NextRequest) {
