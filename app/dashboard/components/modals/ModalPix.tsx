@@ -46,12 +46,31 @@ export function ModalPix({
 
   useEffect(() => {
     if (step !== 'qr') return
+
+    // Realtime — dispara imediatamente se o evento chegar
     const channel = supabase
       .channel(`payment-${consultationId}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'payments', filter: `consultation_id=eq.${consultationId}` },
         (payload) => { if (payload.new.status === 'paid') { setStep('confirmado'); setTimeout(() => onPago(), 2000) } }
       ).subscribe()
-    return () => { supabase.removeChannel(channel) }
+
+    // Polling a cada 4s como fallback — garante atualização mesmo se o Realtime perder o evento
+    const poll = setInterval(async () => {
+      const { data } = await supabase
+        .from('payments')
+        .select('status')
+        .eq('consultation_id', consultationId)
+        .single()
+      if (data?.status === 'paid') {
+        setStep('confirmado')
+        setTimeout(() => onPago(), 2000)
+      }
+    }, 4000)
+
+    return () => {
+      supabase.removeChannel(channel)
+      clearInterval(poll)
+    }
   }, [step, consultationId, supabase, onPago])
 
   async function copiarPix() {
