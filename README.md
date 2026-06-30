@@ -65,7 +65,7 @@ Projeto desenvolvido para explorar integrações reais de IA generativa, pagamen
 
 | Camada | Tecnologia |
 |--------|-----------|
-| Framework | Next.js 16 (App Router, Turbopack) |
+| Framework | Next.js 16.2.9 (App Router, Turbopack) |
 | Linguagem | TypeScript 5 |
 | Banco de dados | Supabase (PostgreSQL + Auth + Storage + Realtime) |
 | IA | Google Gemini 2.5 Flash |
@@ -80,8 +80,8 @@ Projeto desenvolvido para explorar integrações reais de IA generativa, pagamen
 
 ```
 app/
-├── page.tsx                            # Landing page (Server Component)
-├── LandingClient.tsx                   # Landing interativa com sheet de depoimentos
+├── page.tsx                            # Redireciona para /cadastro (landing fora do fluxo principal)
+├── LandingClient.tsx                   # Landing page — existe mas não é mais o ponto de entrada
 ├── layout.tsx                          # Root layout global
 ├── globals.css / landing.css           # Estilos globais e da landing
 │
@@ -156,13 +156,13 @@ app/
     ├── salvar-perfil/route.ts          # Atualização de dados do perfil
     └── promo/perfil/route.tsx          # Rota de perfil para fluxo alternativo
 
-middleware.ts                            # Renova sessão Supabase a cada request + protege rotas autenticadas
+proxy.ts                                 # Renova sessão Supabase a cada request + protege rotas autenticadas (Next.js 16 — substitui middleware.ts)
 
 lib/
 ├── supabase.ts                         # Cliente browser (anon key)
 ├── supabase-server.ts                  # Cliente SSR com cookies
 ├── supabase-admin.ts                   # Service role — bypass RLS (rotas protegidas)
-├── supabase-middleware.ts              # Middleware de autenticação para o App Router
+├── supabase-middleware.ts              # Utilitário de auth SSR (não importado ativamente)
 ├── email.ts                            # Integração Resend — função sendEmail()
 ├── validation.ts                       # Schemas Zod para todas as rotas de API
 ├── constants.ts                        # Valores globais (preço, URL do site)
@@ -222,7 +222,8 @@ supabase/
 | `photos` | Arquivos enviados pelo cliente (referência ao Supabase Storage) |
 | `payments` | Pagamentos PIX com status sincronizado via webhook |
 | `credits` | Créditos disponíveis, usados ou reembolsados |
-| `available_slots` | Grade de horários da especialista |
+| `agenda_config` | Configuração de horários da especialista (dias, horários, duração do slot) |
+| `agenda_blocks` | Horários bloqueados manualmente ou por consulta agendada |
 
 ---
 
@@ -247,7 +248,7 @@ MP_ACCESS_TOKEN=
 RESEND_API_KEY=
 
 CRON_SECRET=
-MP_WEBHOOK_SECRET=
+WEBHOOK_TOKEN=
 ESPECIALISTA_EMAIL=
 ```
 
@@ -259,8 +260,12 @@ ESPECIALISTA_EMAIL=
 
 - **Separação Server/Client Components** — páginas são Server Components que buscam dados no banco e os passam via props para Client Components; zero fetch desnecessário no lado do cliente
 - **Controle de acesso por RLS** — políticas no Supabase garantem isolamento total entre clientes; rotas admin usam service role com validação explícita de identidade antes de qualquer operação
+- **Autenticação obrigatória em todas as rotas de API** — toda rota verifica `auth.getUser()` no servidor antes de qualquer acesso; IDs de usuário nunca são lidos do body (IDOR eliminado)
+- **Rate limiting na triagem IA** — máximo de 20 mensagens por minuto por usuário, verificado via contagem na tabela `messages`; previne abuso da API paga do Gemini
 - **Chat com janela de tempo no servidor** — a API valida o horário agendado antes de aceitar qualquer mensagem; o cliente não pode burlar abrindo o chat antes do horário
-- **Webhook idempotente** — o endpoint do Mercado Pago sempre retorna 200 para evitar retentativas; a lógica de crédito é defensiva contra pagamentos duplicados
+- **Webhook idempotente e com anti-replay** — o endpoint do Mercado Pago autentica via token na URL, re-busca o pagamento na API oficial do MP antes de qualquer ação, verifica idempotência antes de criar crédito, e rejeita notificações com mais de 15 minutos
+- **Security headers HTTP** — `X-Frame-Options: DENY`, `Strict-Transport-Security`, `X-Content-Type-Options`, `Referrer-Policy` e `Permissions-Policy` aplicados globalmente via `next.config.ts`
+- **Validação de todos os inputs com Zod** — schemas tipados para cada rota de API com limites de tamanho, formato e quantidade; payloads malformados ou oversized são rejeitados antes de chegar ao banco
 - **Fluxo de IA com estado por tokens** — o chatbot avança etapas detectando tokens especiais na resposta do Gemini (`ETAPA_FOTOS_ROSTO`, `TRIAGEM_CONCLUIDA`) sem precisar de metadados separados na API
 - **Upload seguro via Service Role** — arquivos enviados pelo cliente chegam à API, são processados em buffer e sobem ao Supabase Storage com credenciais de servidor; nenhuma chave sensível é exposta ao browser
 - **E-mails com React Email** — templates reutilizáveis com layout compartilhado, renderizados server-side e enviados via Resend com subjects e previews corretos para cada evento do ciclo
